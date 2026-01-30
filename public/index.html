@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LANParty</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="joinModal" class="modal">
+    <div class="modal-content">
+      <h2>Join LANParty</h2>
+      <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="20">
+      <div class="color-picker">
+        <label>Choose your character:</label>
+        <div class="color-options">
+          <canvas class="color-option" data-color="#FFDBAC" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="#E0AC69" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="#C68642" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="#8D5524" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="#FFEAA7" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="suit" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="#98D8C8" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="#F7DC6F" width="64" height="64"></canvas>
+          <canvas class="color-option" data-color="peanut" width="64" height="64"></canvas>
+        </div>
+      </div>
+      <button id="joinButton">Join</button>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <div class="status-bar">
+        <span id="connectionStatus">Connecting...</span>
+        <span id="currentRoom">No room</span>
+        <span id="pingDisplay">Ping: --ms</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <h3>Users in Room</h3>
+          <ul id="userList"></ul>
+        </div>
+
+        <div class="panel audio-controls">
+          <h3>Audio</h3>
+          <button id="enableAudioButton" class="control-btn hidden">🎙️ Enable Audio</button>
+          <button id="muteButton" class="control-btn">🎤 Mute</button>
+          <button id="deafenButton" class="control-btn">🔊 Deafen</button>
+          <button id="pixelEditorButton" class="control-btn">🎨 Edit Peanut Sprite</button>
+          <div class="ptt-info">
+            <small>Push-to-talk: V</small>
+          </div>
+          <div class="voice-filters">
+            <h4>Voice Filters</h4>
+            <button class="filter-btn" data-filter="none">1: None</button>
+            <button class="filter-btn" data-filter="reverb">2: Reverb</button>
+            <button class="filter-btn" data-filter="super-reverb">3: Super Reverb</button>
+            <button class="filter-btn" data-filter="echo">4: Echo</button>
+            <button class="filter-btn" data-filter="overdrive">5: Overdrive</button>
+            <button class="filter-btn" data-filter="alien">6: Alien</button>
+            <button class="filter-btn" data-filter="low">7: Low Pitch</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="chat-panel">
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input">
+          <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500">
+          <button id="sendButton">Send</button>
+        </div>
+      </div>
+    </main>
+
+    <div class="audio-visualizer">
+      <canvas id="audioVisualizer"></canvas>
+    </div>
+
+    <div id="video-popup" class="video-popup"></div>
+  </div>
+
+  <script src="peanut_sprite_data.js"></script>
+  <script src="game.js"></script>
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

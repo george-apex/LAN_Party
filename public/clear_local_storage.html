@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Clear LocalStorage</title></head>
+<body>
+<h1>Clearing LocalStorage...</h1>
+<script>
+localStorage.removeItem('peanutSpriteData_down');
+localStorage.removeItem('peanutSpriteData_up');
+localStorage.removeItem('peanutSpriteData_left');
+localStorage.removeItem('peanutSpriteData_right');
+localStorage.removeItem('peanutSpriteData_backup');
+document.body.innerHTML = '<h1>LocalStorage cleared! You can close this tab.</h1>';
+</script>
+</body>
+</html>

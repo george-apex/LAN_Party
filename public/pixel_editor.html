@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peanut Pixel Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .canvas-container {
+      border: 2px solid #444;
+      background: #000;
+    }
+    canvas {
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+    .controls {
+      background: #16213e;
+      padding: 20px;
+      border-radius: 8px;
+      min-width: 200px;
+    }
+    .color-palette {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 15px 0;
+    }
+    .color-btn {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #555;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .color-btn.selected {
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    .direction-selector {
+      margin-bottom: 15px;
+    }
+    .direction-selector label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .direction-selector select {
+      width: 100%;
+      padding: 8px;
+      background: #0f0f1a;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4ECDC4;
+      color: #0f0f1a;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #3DB8B0;
+    }
+    .info {
+      margin-top: 15px;
+      padding: 10px;
+      background: #0f0f1a;
+      border-radius: 4px;
+    }
+    .info p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Peanut Pixel Editor</h1>
+  
+  <div class="container">
+    <div class="canvas-container">
+      <canvas id="editorCanvas"></canvas>
+    </div>
+    
+    <div class="controls">
+      <div class="direction-selector">
+        <label for="directionSelect">Direction:</label>
+        <select id="directionSelect">
+          <option value="down">Down (Front)</option>
+          <option value="up">Up (Back)</option>
+          <option value="left">Left</option>
+          <option value="right">Right</option>
+        </select>
+        <p style="font-size: 12px; color: #888; margin-top: 5px;">
+          Changes are saved per direction. Use "Export All Directions" to download the complete sprite file.
+        </p>
+      </div>
+      
+      <div class="color-palette" id="colorPalette"></div>
+      
+      <button onclick="saveChanges()">Save Changes</button>
+      <button onclick="resetToOriginal()">Reset to Original</button>
+      <button onclick="clearAllSavedData()">Clear All Saved Data</button>
+      <button onclick="restoreBackup()">Restore from Backup</button>
+      <button onclick="exportData()">Export Current Direction</button>
+      <button onclick="exportAllDirections()">Export All Directions</button>
+      <button onclick="previewSprite()">Preview Sprite</button>
+      <button onclick="testExportValidation()">Test Export Validation</button>
+      
+      <div class="info">
+        <p>Current color: <span id="currentColor">#000000</span></p>
+        <p>Pixel: <span id="pixelInfo">-</span></p>
+        <p>Sprite info: <span id="spriteInfo">Loading...</span></p>
+        <p>Validation: <span id="validationStatus" style="color: #00ff00;">✓ Valid</span></p>
+        <p>Modified pixels: <span id="modifiedCount">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="peanut_sprite_data.js"></script>
+  <script>
+    const canvas = document.getElementById('editorCanvas');
+    const ctx = canvas.getContext('2d');
+    const directionSelect = document.getElementById('directionSelect');
+    let zoom = 4;
+    let selectedColor = '#000000';
+    let modifiedPixels = new Map();
+    let currentDirection = 'down';
+    
+    const colors = [
+      '#000000', '#ffffff', '#ff6060', '#af7b0e',
+      '#ce9b69', '#191929', '#161e36', '#e85a5a',
+      '#c44040', '#ff0000', '#00ff00', '#0000ff',
+      '#EYE_LEFT', '#EYE_RIGHT', '#MOUTH'
+    ];
+    
+    function init() {
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      
+      const validation = validateSpriteData(spriteData);
+      if (!validation.valid) {
+        alert(`Warning: Loaded sprite data has errors: ${validation.error}\n\nThe editor may not work correctly.`);
+      }
+      
+      canvas.width = srcWidth * zoom;
+      canvas.height = srcHeight * zoom;
+      
+      ctx.imageSmoothingEnabled = false;
+      
+      createColorPalette();
+      createBackup();
+      render();
+      
+      canvas.addEventListener('click', handleCanvasClick);
+      canvas.addEventListener('mousemove', handleMouseMove);
+      directionSelect.addEventListener('change', handleDirectionChange);
+    }
+    
+    function handleDirectionChange() {
+      currentDirection = directionSelect.value;
+      modifiedPixels.clear();
+      
+      const savedData = localStorage.getItem(`peanutSpriteData_${currentDirection}`);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          const validation = validateSpriteData(parsed);
+          if (validation.valid) {
+            peanutSpriteData[currentDirection] = parsed;
+          } else {
+            console.warn(`Saved data for ${currentDirection} is invalid:`, validation.error);
+          }
+        } catch (e) {
+          console.warn(`Failed to load saved data for ${currentDirection}:`, e);
+        }
+      }
+      
+      const spriteData = peanutSpriteData[currentDirection];
+      canvas.width = spriteData.width * zoom;
+      canvas.height = spriteData.height * zoom;
+      render();
+    }
+    
+    function createColorPalette() {
+      const palette = document.getElementById('colorPalette');
+      palette.innerHTML = '';
+      colors.forEach(color => {
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        btn.style.backgroundColor = color;
+        btn.onclick = () => selectColor(color, btn);
+        if (color === selectedColor) btn.classList.add('selected');
+        palette.appendChild(btn);
+      });
+    }
+    
+    function selectColor(color, btn) {
+      selectedColor = color;
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('currentColor').textContent = color;
+    }
+    
+    function render() {
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      const pixels = spriteData.pixels;
+      
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      document.getElementById('spriteInfo').textContent = `${srcWidth}x${srcHeight}, ${pixels.length} rows`;
+      document.getElementById('modifiedCount').textContent = modifiedPixels.size;
+      
+      const validation = validateSpriteData(spriteData);
+      const validationStatus = document.getElementById('validationStatus');
+      if (validation.valid) {
+        validationStatus.textContent = '✓ Valid';
+        validationStatus.style.color = '#00ff00';
+      } else {
+        validationStatus.textContent = '✗ Invalid: ' + validation.error;
+        validationStatus.style.color = '#ff0000';
+      }
+      
+      for (let y = 0; y < srcHeight; y++) {
+        for (let x = 0; x < srcWidth; x++) {
+          const pixelKey = `${x},${y}`;
+          const color = modifiedPixels.has(pixelKey) ? modifiedPixels.get(pixelKey) : pixels[y][x];
+          ctx.fillStyle = color;
+          ctx.fillRect(x * zoom, y * zoom, zoom, zoom);
+        }
+      }
+    }
+    
+    function handleCanvasClick(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / zoom);
+      const y = Math.floor((e.clientY - rect.top) / zoom);
+      
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      
+      if (x >= 0 && x < srcWidth && y >= 0 && y < srcHeight) {
+        const pixelKey = `${x},${y}`;
+        modifiedPixels.set(pixelKey, selectedColor);
+        render();
+      }
+    }
+    
+    function handleMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / zoom);
+      const y = Math.floor((e.clientY - rect.top) / zoom);
+      
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      
+      if (x >= 0 && x < srcWidth && y >= 0 && y < srcHeight) {
+        document.getElementById('pixelInfo').textContent = `(${x}, ${y})`;
+      }
+    }
+    
+    function saveChanges() {
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      const pixels = JSON.parse(JSON.stringify(spriteData.pixels));
+      
+      modifiedPixels.forEach((color, pixelKey) => {
+        const [x, y] = pixelKey.split(',').map(Number);
+        if (y < pixels.length && x < pixels[y].length) {
+          pixels[y][x] = color;
+        }
+      });
+      
+      const saveData = {
+        width: srcWidth,
+        height: srcHeight,
+        pixels: pixels
+      };
+      
+      const validation = validateSpriteData(saveData);
+      if (!validation.valid) {
+        alert(`Save failed: ${validation.error}\n\nPlease check your sprite data and try again.`);
+        return;
+      }
+      
+      const newData = JSON.stringify(saveData, null, 2);
+      localStorage.setItem(`peanutSpriteData_${currentDirection}`, newData);
+      alert(`Changes saved for ${currentDirection} direction!\n\nUse "Export Current Direction" or "Export All Directions" to download the file.`);
+    }
+    
+    function resetToOriginal() {
+      modifiedPixels.clear();
+      localStorage.removeItem(`peanutSpriteData_${currentDirection}`);
+      render();
+    }
+    
+    function clearAllSavedData() {
+      if (confirm('Are you sure you want to clear all saved data for all directions? This cannot be undone.')) {
+        const directions = ['down', 'up', 'left', 'right'];
+        directions.forEach(dir => {
+          localStorage.removeItem(`peanutSpriteData_${dir}`);
+        });
+        modifiedPixels.clear();
+        alert('All saved data has been cleared. Reloading the page will restore the original sprite data.');
+      }
+    }
+    
+    function validateSpriteData(data) {
+      if (!data.width || !data.height || !data.pixels) {
+        return { valid: false, error: 'Missing required fields (width, height, or pixels)' };
+      }
+      
+      if (typeof data.width !== 'number' || typeof data.height !== 'number') {
+        return { valid: false, error: 'Width and height must be numbers' };
+      }
+      
+      if (!Array.isArray(data.pixels)) {
+        return { valid: false, error: 'Pixels must be an array' };
+      }
+      
+      if (data.pixels.length !== data.height) {
+        return { valid: false, error: `Pixel rows (${data.pixels.length}) does not match height (${data.height})` };
+      }
+      
+      for (let i = 0; i < data.pixels.length; i++) {
+        const row = data.pixels[i];
+        if (!Array.isArray(row)) {
+          return { valid: false, error: `Row ${i} is not an array` };
+        }
+        if (row.length !== data.width) {
+          return { valid: false, error: `Row ${i} length (${row.length}) does not match width (${data.width})` };
+        }
+      }
+      
+      return { valid: true };
+    }
+    
+    function validateExportedFile(content) {
+      try {
+        const jsCode = content.replace('const peanutSpriteData = ', '').replace('};', '}');
+        const data = JSON.parse(jsCode);
+        
+        if (data.down && data.up && data.left && data.right) {
+          const directions = ['down', 'up', 'left', 'right'];
+          for (const dir of directions) {
+            const validation = validateSpriteData(data[dir]);
+            if (!validation.valid) {
+              return { valid: false, error: `${dir} direction: ${validation.error}` };
+            }
+          }
+          return { valid: true };
+        } else {
+          const validation = validateSpriteData(data);
+          return validation;
+        }
+      } catch (e) {
+        return { valid: false, error: `Invalid JavaScript/JSON: ${e.message}` };
+      }
+    }
+    
+    function createBackup() {
+      const backup = {
+        timestamp: Date.now(),
+        directions: {}
+      };
+      
+      const directions = ['down', 'up', 'left', 'right'];
+      directions.forEach(dir => {
+        backup.directions[dir] = JSON.parse(JSON.stringify(peanutSpriteData[dir]));
+      });
+      
+      localStorage.setItem('peanutSpriteData_backup', JSON.stringify(backup));
+      console.log('Backup created at', new Date(backup.timestamp).toLocaleString());
+    }
+    
+    function restoreBackup() {
+      const backupStr = localStorage.getItem('peanutSpriteData_backup');
+      if (!backupStr) {
+        alert('No backup found!');
+        return false;
+      }
+      
+      try {
+        const backup = JSON.parse(backupStr);
+        const directions = ['down', 'up', 'left', 'right'];
+        
+        directions.forEach(dir => {
+          if (backup.directions[dir]) {
+            peanutSpriteData[dir] = backup.directions[dir];
+          }
+        });
+        
+        const backupDate = new Date(backup.timestamp).toLocaleString();
+        alert(`Backup restored from ${backupDate}`);
+        return true;
+      } catch (e) {
+        alert('Failed to restore backup: ' + e.message);
+        return false;
+      }
+    }
+    
+    function exportData() {
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      const pixels = JSON.parse(JSON.stringify(spriteData.pixels));
+      
+      modifiedPixels.forEach((color, pixelKey) => {
+        const [x, y] = pixelKey.split(',').map(Number);
+        if (y < pixels.length && x < pixels[y].length) {
+          pixels[y][x] = color;
+        }
+      });
+      
+      const exportData = {
+        width: srcWidth,
+        height: srcHeight,
+        pixels: pixels
+      };
+      
+      const validation = validateSpriteData(exportData);
+      if (!validation.valid) {
+        alert(`Export failed: ${validation.error}\n\nPlease check your sprite data and try again.`);
+        return;
+      }
+      
+      const newData = `const peanutSpriteData = {
+  width: ${srcWidth},
+  height: ${srcHeight},
+  pixels: ${JSON.stringify(pixels)}
+};`;
+      
+      try {
+        const blob = new Blob([newData], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `peanut_sprite_data_${currentDirection}.js`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        console.log(`Exported ${currentDirection} direction: ${srcWidth}x${srcHeight}, ${pixels.length} rows`);
+      } catch (e) {
+        alert(`Export failed: ${e.message}`);
+      }
+    }
+    
+    function exportAllDirections() {
+      const directions = ['down', 'up', 'left', 'right'];
+      const exportData = {};
+      
+      for (const dir of directions) {
+        const spriteData = peanutSpriteData[dir];
+        const pixels = JSON.parse(JSON.stringify(spriteData.pixels));
+        
+        if (dir === currentDirection) {
+          modifiedPixels.forEach((color, pixelKey) => {
+            const [x, y] = pixelKey.split(',').map(Number);
+            if (y < pixels.length && x < pixels[y].length) {
+              pixels[y][x] = color;
+            }
+          });
+        }
+        
+        exportData[dir] = {
+          width: spriteData.width,
+          height: spriteData.height,
+          pixels: pixels
+        };
+        
+        const validation = validateSpriteData(exportData[dir]);
+        if (!validation.valid) {
+          alert(`Export failed for ${dir} direction: ${validation.error}\n\nPlease check your sprite data and try again.`);
+          return;
+        }
+      }
+      
+      const newData = `const peanutSpriteData = {
+  down: ${JSON.stringify(exportData.down)},
+  up: ${JSON.stringify(exportData.up)},
+  left: ${JSON.stringify(exportData.left)},
+  right: ${JSON.stringify(exportData.right)}
+};`;
+      
+      try {
+        const blob = new Blob([newData], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'peanut_sprite_data.js';
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        console.log('Exported all directions successfully');
+        directions.forEach(dir => {
+          console.log(`  ${dir}: ${exportData[dir].width}x${exportData[dir].height}, ${exportData[dir].pixels.length} rows`);
+        });
+      } catch (e) {
+        alert(`Export failed: ${e.message}`);
+      }
+    }
+    
+    function previewSprite() {
+      const spriteData = peanutSpriteData[currentDirection];
+      const srcWidth = spriteData.width;
+      const srcHeight = spriteData.height;
+      const pixels = JSON.parse(JSON.stringify(spriteData.pixels));
+      
+      modifiedPixels.forEach((color, pixelKey) => {
+        const [x, y] = pixelKey.split(',').map(Number);
+        if (y < pixels.length && x < pixels[y].length) {
+          pixels[y][x] = color;
+        }
+      });
+      
+      const previewWindow = window.open('', '_blank', 'width=400,height=500');
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Sprite Preview - ${currentDirection}</title>
+          <style>
+            body {
+              background: #1a1a2e;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 20px;
+              color: white;
+              font-family: Arial, sans-serif;
+            }
+            canvas {
+              image-rendering: pixelated;
+              border: 2px solid #444;
+              margin: 20px 0;
+            }
+            .info {
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>Sprite Preview - ${currentDirection}</h2>
+          <div class="info">
+            <p>Width: ${srcWidth} | Height: ${srcHeight}</p>
+            <p>Pixel rows: ${pixels.length}</p>
+          </div>
+          <canvas id="previewCanvas"></canvas>
+          <script>
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            const zoom = 4;
+            canvas.width = ${srcWidth} * zoom;
+            canvas.height = ${srcHeight} * zoom;
+            ctx.imageSmoothingEnabled = false;
+            
+            const pixels = ${JSON.stringify(pixels)};
+            const bgColors = ['#161e36', '#191929'];
+            
+            for (let y = 0; y < ${srcHeight}; y++) {
+              for (let x = 0; x < ${srcWidth}; x++) {
+                const color = pixels[y][x];
+                if (!bgColors.includes(color)) {
+                  ctx.fillStyle = color;
+                  ctx.fillRect(x * zoom, y * zoom, zoom, zoom);
+                }
+              }
+            }
+          <\/script>
+        </body>
+        </html>
+      `);
+      previewWindow.document.close();
+    }
+    
+    function testExportValidation() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.js';
+      
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const content = event.target.result;
+          const validation = validateExportedFile(content);
+          
+          if (validation.valid) {
+            alert('✓ File is valid!\n\nThe sprite data structure is correct and can be used in the game.');
+          } else {
+            alert('✗ File is invalid!\n\nError: ' + validation.error + '\n\nPlease check the file and try exporting again.');
+          }
+        };
+        reader.readAsText(file);
+      };
+      
+      input.click();
+    }
+    
+    init();
+  </script>
+</body>
+</html>

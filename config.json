@@ -1,0 +1,75 @@
+{
+  "port": 3000,
+  "adminPassword": "admin123",
+  "rooms": [
+    {
+      "roomId": "hub",
+      "name": "Hub",
+      "spawnPoint": { "x": 400, "y": 300 },
+      "capacity": 20,
+      "color": "#FFD700",
+      "doorways": [
+        { "direction": "top", "targetRoom": "lounge", "x": 400, "width": 100 },
+        { "direction": "right", "targetRoom": "dev", "y": 300, "width": 100 },
+        { "direction": "bottom", "targetRoom": "games", "x": 400, "width": 100 },
+        { "direction": "left", "targetRoom": "music", "y": 300, "width": 100 }
+      ]
+    },
+    {
+      "roomId": "lounge",
+      "name": "Lounge",
+      "spawnPoint": { "x": 400, "y": 500 },
+      "capacity": 10,
+      "color": "#FF6B6B",
+      "doorways": [
+        { "direction": "bottom", "targetRoom": "hub", "x": 400, "width": 100 }
+      ]
+    },
+    {
+      "roomId": "dev",
+      "name": "Dev Room",
+      "spawnPoint": { "x": 100, "y": 300 },
+      "capacity": 8,
+      "color": "#4ECDC4",
+      "doorways": [
+        { "direction": "left", "targetRoom": "hub", "y": 300, "width": 100 }
+      ]
+    },
+    {
+      "roomId": "games",
+      "name": "Games",
+      "spawnPoint": { "x": 400, "y": 100 },
+      "capacity": 12,
+      "color": "#FFE66D",
+      "doorways": [
+        { "direction": "top", "targetRoom": "hub", "x": 400, "width": 100 },
+        { "direction": "right", "targetRoom": "cinema", "y": 300, "width": 100 }
+      ]
+    },
+    {
+      "roomId": "cinema",
+      "name": "Cinema",
+      "spawnPoint": { "x": 100, "y": 300 },
+      "capacity": 20,
+      "color": "#6C5CE7",
+      "doorways": [
+        { "direction": "left", "targetRoom": "games", "y": 300, "width": 100 }
+      ]
+    },
+    {
+      "roomId": "music",
+      "name": "Music",
+      "spawnPoint": { "x": 700, "y": 300 },
+      "capacity": 10,
+      "color": "#95E1D3",
+      "doorways": [
+        { "direction": "right", "targetRoom": "hub", "y": 300, "width": 100 }
+      ]
+    }
+  ],
+  "map": {
+    "width": 800,
+    "height": 600,
+    "tileSize": 20
+  }
+}
