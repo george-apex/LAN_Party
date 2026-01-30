@@ -5,7 +5,7 @@ let ws;
 let audioManager;
 let userId;
 let currentRoomId = null;
-let selectedColor = '#4ECDC4';
+let selectedColor = '#E0AC69';
 let pingStartTime = 0;
 
 const joinModal = document.getElementById('joinModal');

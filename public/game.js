@@ -1,4 +1,14 @@
 class Game {
+  // Character Types Reference:
+  // 'peanut' - Peanut (pixel-art character with animations/sounds)
+  // '#FFDBAC' - Cowboy (tan skin, cowboy hat, vest, chaps)
+  // '#E0AC69' - Tan (F1 driver - Ollie Bearman Haas, custom helmet and race suit)
+  // '#C68642' - Bronze (medium brown skin, fedora)
+  // '#8D5524' - Cocoa (dark brown skin, fedora)
+  // '#FFEAA7' - Blonde (light skin, fedora)
+  // 'suit' - Suit (formal business suit with tie)
+  // '#98D8C8' - Teal (teal skin, fedora)
+  // '#F7DC6F' - Gold (gold skin, fedora)
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
@@ -102,11 +112,29 @@ class Game {
   }
 
   createCharacterSprite(color, direction, frame, isLocalPlayer = false, player = null) {
+    const characterTypes = {
+      'peanut': 'Peanut',
+      '#FFDBAC': 'Cowboy',
+      '#E0AC69': 'Tan',
+      '#C68642': 'Bronze',
+      '#8D5524': 'Cocoa',
+      '#FFEAA7': 'Blonde',
+      'suit': 'Suit',
+      '#98D8C8': 'Teal',
+      '#F7DC6F': 'Gold'
+    };
+
     if (color === 'peanut') {
       return this.createPeanutSprite(direction, frame, isLocalPlayer, player);
     }
     if (color === '#FFDBAC') {
       return this.createCowboySprite(direction, frame, isLocalPlayer, player);
+    }
+    if (color === 'suit') {
+      return this.createSuitSprite(direction, frame, isLocalPlayer, player);
+    }
+    if (color === '#E0AC69') {
+      return this.createTanSprite(direction, frame, isLocalPlayer, player);
     }
 
     const size = 48;
@@ -123,24 +151,16 @@ class Game {
     const armVerticalOffset = (frame === 1 ? -1 : (frame === 2 ? 1 : 0));
 
     const rgb = this.hexToRgb(color);
-    const playerId = player ? player.id : '';
 
-    const skinToneColors = ['#FFDBAC', '#E0AC69', '#C68642', '#8D5524'];
-    const skinColors = ['#FFE4C4', '#FFDAB9', '#F5DEB3', '#DEB887', '#D2B48C', '#C4A484', '#8D5524', '#6B4423'];
-    const pantsColors = ['#4169E1', '#228B22', '#DC143C', '#FF8C00', '#9932CC', '#20B2AA', '#4682B4', '#8B0000'];
-    const shoeColors = ['#8B4513', '#2F4F4F', '#000000', '#4A4A4A', '#696969', '#8B0000', '#556B2F', '#483D8B'];
+    const skinColor = '#FFE4C4';
+    const pantsColor = '#4169E1';
+    const shoeColor = '#8B4513';
 
-    const hash = this.hashCode(playerId);
-    const isSkinTone = skinToneColors.includes(color);
-    const skinColor = isSkinTone ? color : skinColors[Math.abs(hash) % skinColors.length];
-    const pantsColor = pantsColors[Math.abs(hash >> 8) % pantsColors.length];
-    const shoeColor = shoeColors[Math.abs(hash >> 16) % shoeColors.length];
-
-    const headColor = isSkinTone ? '#4ECDC4' : `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-    const shirtColor = isSkinTone ? '#3DB8B0' : `rgb(${Math.max(0, rgb.r - 30)}, ${Math.max(0, rgb.g - 30)}, ${Math.max(0, rgb.b - 30)})`;
-    const darkerShirtColor = isSkinTone ? '#2D9A93' : `rgb(${Math.max(0, rgb.r - 60)}, ${Math.max(0, rgb.g - 60)}, ${Math.max(0, rgb.b - 60)})`;
-    const fedoraColor = isSkinTone ? '#2D9A93' : `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(0, rgb.g - 40)}, ${Math.max(0, rgb.b - 40)})`;
-    const fedoraBandColor = isSkinTone ? '#4ECDC4' : `rgb(${Math.max(0, rgb.r - 20)}, ${Math.max(0, rgb.g - 20)}, ${Math.max(0, rgb.b - 20)})`;
+    const headColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    const shirtColor = `rgb(${Math.max(0, rgb.r - 30)}, ${Math.max(0, rgb.g - 30)}, ${Math.max(0, rgb.b - 30)})`;
+    const darkerShirtColor = `rgb(${Math.max(0, rgb.r - 60)}, ${Math.max(0, rgb.g - 60)}, ${Math.max(0, rgb.b - 60)})`;
+    const fedoraColor = `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(0, rgb.g - 40)}, ${Math.max(0, rgb.b - 40)})`;
+    const fedoraBandColor = `rgb(${Math.max(0, rgb.r - 20)}, ${Math.max(0, rgb.g - 20)}, ${Math.max(0, rgb.b - 20)})`;
 
     if (direction === 'down') {
       ctx.fillStyle = shoeColor;
@@ -1056,6 +1076,567 @@ class Game {
       ctx.fillRect(25, verticalOffset + 16, 1, 1);
       ctx.fillRect(26, verticalOffset + 16, 1, 2);
       ctx.fillRect(27, verticalOffset + 15, 1, 2);
+    }
+
+    return canvas;
+  }
+
+  createSuitSprite(direction, frame, isLocalPlayer = false, player = null) {
+    const size = 48;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    ctx.imageSmoothingEnabled = false;
+
+    const legOffset = (frame === 1 ? 2 : (frame === 2 ? -2 : 0));
+    const armOffset = (frame === 1 ? -2 : (frame === 2 ? 2 : 0));
+    const verticalOffset = (frame === 1 ? -1 : (frame === 2 ? 1 : 0));
+    const armVerticalOffset = (frame === 1 ? -1 : (frame === 2 ? 1 : 0));
+
+    const skinColor = '#FFE4C4';
+    const suitColor = '#1a1a2e';
+    const shirtColor = '#ffffff';
+    const tieColor = '#8B0000';
+    const shoeColor = '#0a0a15';
+    const hairColor = '#2F1810';
+    const gloveColor = '#FFE4C4';
+
+    if (direction === 'down') {
+      ctx.fillStyle = shoeColor;
+      ctx.fillRect(15 + legOffset, 39 + verticalOffset, 8, 9);
+      ctx.fillRect(26 - legOffset, 39 + verticalOffset, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30 + verticalOffset, 8, 9);
+      ctx.fillRect(26 - legOffset, 30 + verticalOffset, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(9, 18 + verticalOffset + armVerticalOffset, 5, 7);
+      ctx.fillRect(34, 18 + verticalOffset - armVerticalOffset, 5, 7);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(9, 25 + verticalOffset + armVerticalOffset, 5, 3);
+      ctx.fillRect(34, 25 + verticalOffset - armVerticalOffset, 5, 3);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(12, 18 + verticalOffset, 24, 15);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(18, 18 + verticalOffset, 12, 15);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(21, 18 + verticalOffset, 6, 8);
+
+      ctx.fillStyle = tieColor;
+      ctx.fillRect(23, 18 + verticalOffset, 2, 10);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(9, 18 + verticalOffset + armVerticalOffset, 5, 10);
+      ctx.fillRect(34, 18 + verticalOffset - armVerticalOffset, 5, 10);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(9, 21 + verticalOffset + armVerticalOffset, 5, 3);
+      ctx.fillRect(34, 21 + verticalOffset - armVerticalOffset, 5, 3);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(9, 25 + verticalOffset + armVerticalOffset, 5, 3);
+      ctx.fillRect(34, 25 + verticalOffset - armVerticalOffset, 5, 3);
+
+      ctx.fillStyle = hairColor;
+      ctx.fillRect(16, verticalOffset + 3, 16, 3);
+      ctx.fillRect(15, verticalOffset + 5, 18, 2);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(16, verticalOffset + 8, 16, 8);
+
+      ctx.fillStyle = '#e8d4b8';
+      ctx.fillRect(17, verticalOffset + 9, 14, 6);
+
+      ctx.fillStyle = '#4169E1';
+      ctx.fillRect(19, verticalOffset + 10, 3, 3);
+      ctx.fillRect(26, verticalOffset + 10, 3, 3);
+
+      ctx.fillStyle = '#FFF';
+      ctx.fillRect(20, verticalOffset + 11, 1, 1);
+      ctx.fillRect(27, verticalOffset + 11, 1, 1);
+
+      ctx.fillStyle = '#2F1810';
+      ctx.fillRect(20, verticalOffset + 13, 1, 2);
+      ctx.fillRect(21, verticalOffset + 14, 1, 2);
+      ctx.fillRect(22, verticalOffset + 14, 1, 1);
+      ctx.fillRect(23, verticalOffset + 13, 1, 1);
+      ctx.fillRect(24, verticalOffset + 13, 1, 1);
+      ctx.fillRect(25, verticalOffset + 14, 1, 1);
+      ctx.fillRect(26, verticalOffset + 14, 1, 2);
+      ctx.fillRect(27, verticalOffset + 13, 1, 2);
+
+    } else if (direction === 'left') {
+      ctx.fillStyle = shoeColor;
+      ctx.fillRect(15 + legOffset, 39, 8, 9);
+      ctx.fillRect(26 - legOffset, 39, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30, 8, 9);
+      ctx.fillRect(26 - legOffset, 30, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(11 + armOffset, 18 + armVerticalOffset, 6, 12);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(11 + armOffset, 22 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(11 + armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(12, 18, 24, 15);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(18, 18, 12, 15);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(21, 18, 6, 8);
+
+      ctx.fillStyle = tieColor;
+      ctx.fillRect(23, 18, 2, 10);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(31 - armOffset, 18 + armVerticalOffset, 6, 12);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(31 - armOffset, 22 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(31 - armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = hairColor;
+      ctx.fillRect(16, verticalOffset + 3, 16, 3);
+      ctx.fillRect(15, verticalOffset + 5, 18, 2);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(16, verticalOffset + 8, 16, 8);
+
+      ctx.fillStyle = '#e8d4b8';
+      ctx.fillRect(17, verticalOffset + 9, 14, 6);
+
+      ctx.fillStyle = '#4169E1';
+      ctx.fillRect(19, verticalOffset + 10, 3, 3);
+      ctx.fillRect(26, verticalOffset + 10, 3, 3);
+
+      ctx.fillStyle = '#FFF';
+      ctx.fillRect(20, verticalOffset + 11, 1, 1);
+      ctx.fillRect(27, verticalOffset + 11, 1, 1);
+
+      ctx.fillStyle = '#2F1810';
+      ctx.fillRect(20, verticalOffset + 13, 1, 2);
+      ctx.fillRect(21, verticalOffset + 14, 1, 2);
+      ctx.fillRect(22, verticalOffset + 14, 1, 1);
+      ctx.fillRect(23, verticalOffset + 13, 1, 1);
+      ctx.fillRect(24, verticalOffset + 13, 1, 1);
+      ctx.fillRect(25, verticalOffset + 14, 1, 1);
+      ctx.fillRect(26, verticalOffset + 14, 1, 2);
+      ctx.fillRect(27, verticalOffset + 13, 1, 2);
+
+    } else if (direction === 'right') {
+      ctx.fillStyle = shoeColor;
+      ctx.fillRect(15 + legOffset, 39, 8, 9);
+      ctx.fillRect(26 - legOffset, 39, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30, 8, 9);
+      ctx.fillRect(26 - legOffset, 30, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(33 - armOffset, 18 + armVerticalOffset, 6, 12);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(33 - armOffset, 22 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(33 - armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(12, 18, 24, 15);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(18, 18, 12, 15);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(21, 18, 6, 8);
+
+      ctx.fillStyle = tieColor;
+      ctx.fillRect(23, 18, 2, 10);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(11 + armOffset, 18 + armVerticalOffset, 6, 12);
+
+      ctx.fillStyle = shirtColor;
+      ctx.fillRect(11 + armOffset, 22 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(11 + armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = hairColor;
+      ctx.fillRect(16, verticalOffset + 3, 16, 3);
+      ctx.fillRect(15, verticalOffset + 5, 18, 2);
+
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(16, verticalOffset + 8, 16, 8);
+
+      ctx.fillStyle = '#e8d4b8';
+      ctx.fillRect(17, verticalOffset + 9, 14, 6);
+
+      ctx.fillStyle = '#4169E1';
+      ctx.fillRect(19, verticalOffset + 10, 3, 3);
+      ctx.fillRect(26, verticalOffset + 10, 3, 3);
+
+      ctx.fillStyle = '#FFF';
+      ctx.fillRect(20, verticalOffset + 11, 1, 1);
+      ctx.fillRect(27, verticalOffset + 11, 1, 1);
+
+      ctx.fillStyle = '#2F1810';
+      ctx.fillRect(20, verticalOffset + 13, 1, 2);
+      ctx.fillRect(21, verticalOffset + 14, 1, 2);
+      ctx.fillRect(22, verticalOffset + 14, 1, 1);
+      ctx.fillRect(23, verticalOffset + 13, 1, 1);
+      ctx.fillRect(24, verticalOffset + 13, 1, 1);
+      ctx.fillRect(25, verticalOffset + 14, 1, 1);
+      ctx.fillRect(26, verticalOffset + 14, 1, 2);
+      ctx.fillRect(27, verticalOffset + 13, 1, 2);
+    }
+
+    return canvas;
+  }
+
+  createTanSprite(direction, frame, isLocalPlayer = false, player = null) {
+    const size = 48;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    ctx.imageSmoothingEnabled = false;
+
+    const legOffset = (frame === 1 ? 2 : (frame === 2 ? -2 : 0));
+    const armOffset = (frame === 1 ? -2 : (frame === 2 ? 2 : 0));
+    const verticalOffset = (frame === 1 ? -1 : (frame === 2 ? 1 : 0));
+    const armVerticalOffset = (frame === 1 ? -1 : (frame === 2 ? 1 : 0));
+
+    const suitColor = '#1a1a1a';
+    const suitDark = '#0a0a0a';
+    const suitRed = '#ff0000';
+    const suitWhite = '#ffffff';
+    const helmetBlack = '#0a0a0a';
+    const helmetBlue = '#3b82f6';
+    const helmetYellow = '#fbbf24';
+    const visorColor = '#1a1a2e';
+    const visorHighlight = '#2a2a3e';
+    const gloveColor = '#ff0000';
+    const skinColor = '#E0AC69';
+
+    if (direction === 'down') {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(15 + legOffset, 39 + verticalOffset, 8, 9);
+      ctx.fillRect(26 - legOffset, 39 + verticalOffset, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30 + verticalOffset, 8, 9);
+      ctx.fillRect(26 - legOffset, 30 + verticalOffset, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(12, 18 + verticalOffset, 24, 15);
+
+      ctx.fillStyle = suitDark;
+      ctx.fillRect(18, 18 + verticalOffset, 12, 15);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(20, 24 + verticalOffset, 8, 3);
+
+      ctx.fillStyle = suitRed;
+      ctx.fillRect(20, 25 + verticalOffset, 8, 1);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(17, 19 + verticalOffset, 1, 12);
+      ctx.fillRect(30, 19 + verticalOffset, 1, 12);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(9, 18 + verticalOffset + armVerticalOffset, 5, 7);
+      ctx.fillRect(34, 18 + verticalOffset - armVerticalOffset, 5, 7);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(9, 25 + verticalOffset + armVerticalOffset, 5, 3);
+      ctx.fillRect(34, 25 + verticalOffset - armVerticalOffset, 5, 3);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(14, verticalOffset + 2, 20, 4);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(15, verticalOffset + 4, 18, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(14, verticalOffset + 4, 2, 6);
+      ctx.fillRect(32, verticalOffset + 4, 2, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(18, verticalOffset + 2, 2, 2);
+      ctx.fillRect(28, verticalOffset + 2, 2, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(20, verticalOffset + 3, 8, 1);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(22, verticalOffset + 2, 4, 2);
+      ctx.fillRect(21, verticalOffset + 3, 6, 1);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(23, verticalOffset + 2, 2, 1);
+      ctx.fillRect(24, verticalOffset + 3, 1, 1);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(14, verticalOffset + 2, 20, 4);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(15, verticalOffset + 4, 18, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(14, verticalOffset + 4, 2, 6);
+      ctx.fillRect(32, verticalOffset + 4, 2, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(18, verticalOffset + 2, 2, 2);
+      ctx.fillRect(28, verticalOffset + 2, 2, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(20, verticalOffset + 3, 8, 1);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(22, verticalOffset + 2, 4, 2);
+      ctx.fillRect(21, verticalOffset + 3, 6, 1);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(23, verticalOffset + 2, 2, 1);
+      ctx.fillRect(24, verticalOffset + 3, 1, 1);
+
+      ctx.fillStyle = visorColor;
+      ctx.fillRect(16, verticalOffset + 7, 16, 4);
+
+      ctx.fillStyle = visorHighlight;
+      ctx.fillRect(17, verticalOffset + 7, 6, 1);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(15, verticalOffset + 10, 18, 8);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(16, verticalOffset + 10, 16, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(15, verticalOffset + 10, 2, 8);
+      ctx.fillRect(31, verticalOffset + 10, 2, 8);
+
+    } else if (direction === 'up') {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(15 + legOffset, 39 + verticalOffset, 8, 9);
+      ctx.fillRect(26 - legOffset, 39 + verticalOffset, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30 + verticalOffset, 8, 9);
+      ctx.fillRect(26 - legOffset, 30 + verticalOffset, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(9, 18 + verticalOffset + armVerticalOffset, 5, 7);
+      ctx.fillRect(34, 18 + verticalOffset - armVerticalOffset, 5, 7);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(9, 25 + verticalOffset + armVerticalOffset, 5, 3);
+      ctx.fillRect(34, 25 + verticalOffset - armVerticalOffset, 5, 3);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(14, verticalOffset + 2, 20, 16);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(23, verticalOffset + 2, 2, 16);
+      ctx.fillRect(20, verticalOffset + 4, 1, 12);
+      ctx.fillRect(27, verticalOffset + 4, 1, 12);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(15, verticalOffset + 10, 18, 8);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(12, 18 + verticalOffset, 24, 15);
+
+      ctx.fillStyle = suitDark;
+      ctx.fillRect(18, 18 + verticalOffset, 12, 15);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(17, 19 + verticalOffset, 1, 12);
+      ctx.fillRect(30, 19 + verticalOffset, 1, 12);
+
+      ctx.fillStyle = suitRed;
+      ctx.fillRect(20, 21 + verticalOffset, 8, 8);
+      ctx.fillRect(21, 22 + verticalOffset, 6, 6);
+
+      ctx.fillStyle = suitDark;
+      ctx.fillRect(22, 23 + verticalOffset, 1, 4);
+      ctx.fillRect(26, 23 + verticalOffset, 1, 4);
+      ctx.fillRect(23, 24 + verticalOffset, 3, 1);
+
+    } else if (direction === 'left') {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(15 + legOffset, 39, 8, 9);
+      ctx.fillRect(26 - legOffset, 39, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30, 8, 9);
+      ctx.fillRect(26 - legOffset, 30, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(11 + armOffset, 18 + armVerticalOffset, 6, 7);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(11 + armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(12, 18, 24, 15);
+
+      ctx.fillStyle = suitDark;
+      ctx.fillRect(18, 18, 12, 15);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(20, 24, 8, 3);
+
+      ctx.fillStyle = suitRed;
+      ctx.fillRect(20, 25, 8, 1);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(17, 19, 1, 12);
+      ctx.fillRect(30, 19, 1, 12);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(31 - armOffset, 18 + armVerticalOffset, 6, 7);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(31 - armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(14, verticalOffset + 2, 20, 4);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(15, verticalOffset + 4, 18, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(14, verticalOffset + 4, 2, 6);
+      ctx.fillRect(32, verticalOffset + 4, 2, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(18, verticalOffset + 2, 2, 2);
+      ctx.fillRect(28, verticalOffset + 2, 2, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(20, verticalOffset + 3, 8, 1);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(22, verticalOffset + 2, 4, 2);
+      ctx.fillRect(21, verticalOffset + 3, 6, 1);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(23, verticalOffset + 2, 2, 1);
+      ctx.fillRect(24, verticalOffset + 3, 1, 1);
+
+      ctx.fillStyle = visorColor;
+      ctx.fillRect(16, verticalOffset + 7, 16, 4);
+
+      ctx.fillStyle = visorHighlight;
+      ctx.fillRect(17, verticalOffset + 7, 6, 1);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(15, verticalOffset + 10, 18, 8);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(16, verticalOffset + 10, 16, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(15, verticalOffset + 10, 2, 8);
+      ctx.fillRect(31, verticalOffset + 10, 2, 8);
+
+    } else if (direction === 'right') {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(15 + legOffset, 39, 8, 9);
+      ctx.fillRect(26 - legOffset, 39, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(15 + legOffset, 30, 8, 9);
+      ctx.fillRect(26 - legOffset, 30, 8, 9);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(33 - armOffset, 18 + armVerticalOffset, 6, 7);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(33 - armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(12, 18, 24, 15);
+
+      ctx.fillStyle = suitDark;
+      ctx.fillRect(18, 18, 12, 15);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(20, 24, 8, 3);
+
+      ctx.fillStyle = suitRed;
+      ctx.fillRect(20, 25, 8, 1);
+
+      ctx.fillStyle = suitWhite;
+      ctx.fillRect(17, 19, 1, 12);
+      ctx.fillRect(30, 19, 1, 12);
+
+      ctx.fillStyle = suitColor;
+      ctx.fillRect(11 + armOffset, 18 + armVerticalOffset, 6, 12);
+
+      ctx.fillStyle = gloveColor;
+      ctx.fillRect(11 + armOffset, 25 + armVerticalOffset, 6, 3);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(14, verticalOffset + 2, 20, 4);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(15, verticalOffset + 4, 18, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(14, verticalOffset + 4, 2, 6);
+      ctx.fillRect(32, verticalOffset + 4, 2, 6);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(18, verticalOffset + 2, 2, 2);
+      ctx.fillRect(28, verticalOffset + 2, 2, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(20, verticalOffset + 3, 8, 1);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(22, verticalOffset + 2, 4, 2);
+      ctx.fillRect(21, verticalOffset + 3, 6, 1);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(23, verticalOffset + 2, 2, 1);
+      ctx.fillRect(24, verticalOffset + 3, 1, 1);
+
+      ctx.fillStyle = visorColor;
+      ctx.fillRect(16, verticalOffset + 7, 16, 4);
+
+      ctx.fillStyle = visorHighlight;
+      ctx.fillRect(17, verticalOffset + 7, 6, 1);
+
+      ctx.fillStyle = helmetBlack;
+      ctx.fillRect(15, verticalOffset + 10, 18, 8);
+
+      ctx.fillStyle = helmetBlue;
+      ctx.fillRect(16, verticalOffset + 10, 16, 2);
+
+      ctx.fillStyle = helmetYellow;
+      ctx.fillRect(15, verticalOffset + 10, 2, 8);
+      ctx.fillRect(31, verticalOffset + 10, 2, 8);
     }
 
     return canvas;
